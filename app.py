@@ -307,7 +307,7 @@ def close_db(_exc):
 @app.context_processor
 def inject_globals():
     return {"P": config.PROJECT, "ENTITIES": ENTITIES, "ENGINE": db.ACTIVE_ENGINE,
-            "MONEY_COLS": MONEY_COLS, "today": date.today().isoformat()}
+            "MONEY_COLS": MONEY_COLS, "today": date.today().isoformat(), "DEMO": config.DEMO_MODE}
 
 
 @app.template_filter("money")
@@ -599,6 +599,17 @@ def console():
             except Exception as e:  # noqa: BLE001
                 error = str(e)
     return render_template("console.html", statement=statement, cols=cols, rows=rows, error=error)
+
+
+@app.route("/demo/reset", methods=["POST"])
+def demo_reset():
+    """Online demo only: rebuild the SQLite database with the original sample data."""
+    if not config.DEMO_MODE or db.ACTIVE_ENGINE != "sqlite":
+        abort(404)
+    close_db(None)
+    db.init_sqlite(force=True)
+    flash("Demo data has been reset to the original sample records.", "success")
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/about")

@@ -27,6 +27,10 @@ SQLITE_PATH = os.getenv(
 # ----- Flask ---------------------------------------------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "tms-pgd-dsai-ned-2026")
 
+# ----- Online demo (set DEMO_MODE=1 on the hosting server) ----------------
+# Shows a "Live demo" banner with a button that restores the sample data.
+DEMO_MODE = os.getenv("DEMO_MODE", "0") == "1"
+
 # ----- Project / student profile (shown in the web interface) -------------
 PROJECT = {
     "title":       "Transport Management System",

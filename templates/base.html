@@ -50,6 +50,14 @@
       </div>
     </header>
 
+    {% if DEMO %}
+    <div class="demo-bar">
+      <span><b>Live demo</b> · you can add, edit and delete records here. Changes are shared with other visitors.</span>
+      <form method="post" action="{{ url_for('demo_reset') }}" onsubmit="return confirm('Restore the original sample data?')">
+        <button class="btn btn-sm">Reset demo data</button>
+      </form>
+    </div>
+    {% endif %}
     <main class="content">
       {% with msgs = get_flashed_messages(with_categories=true) %}
         {% if msgs %}<div class="flashes">
