@@ -11,6 +11,8 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+### 🌐 Live demo: [madeelsiddiqui.pythonanywhere.com](https://madeelsiddiqui.pythonanywhere.com)
+
 ![TransitPro operations dashboard](docs/screenshots/01_dashboard.png)
 
 </div>
