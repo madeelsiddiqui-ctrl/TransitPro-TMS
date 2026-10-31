@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Operations Dashboard</h1>
+    <p class="muted">Live summary computed with SQL aggregates (COUNT, SUM, GROUP BY) over 7 related tables.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('create_record', name='shipments') }}">{{ icon('plus', 16) }} New Shipment</a>
+</div>
+
+<section class="kpis">
+  <div class="kpi"><div class="kpi-ico blue">{{ icon('box') }}</div><div><span>Total Shipments</span><strong>{{ counts.shipments }}</strong></div></div>
+  <div class="kpi"><div class="kpi-ico green">{{ icon('money') }}</div><div><span>Freight Revenue (PKR)</span><strong>{{ revenue|money }}</strong></div></div>
+  <div class="kpi"><div class="kpi-ico teal">{{ icon('card') }}</div><div><span>Payments Received</span><strong>{{ received|money }}</strong></div></div>
+  <div class="kpi"><div class="kpi-ico amber">{{ icon('clock') }}</div><div><span>Outstanding Balance</span><strong>{{ outstanding|money }}</strong></div></div>
+</section>
+
+<section class="grid-3">
+  <div class="card">
+    <div class="card-head"><h3>Shipments by status</h3></div>
+    <div class="bars">
+      {% for r in by_status %}
+      <div class="bar-row">
+        <span class="bar-label"><span class="badge s-{{ r.status|replace(' ','-')|lower }}">{{ r.status }}</span></span>
+        <div class="bar-track"><div class="bar-fill" style="width: {{ (r.n / max_status * 100)|round }}%"></div></div>
+        <span class="bar-val">{{ r.n }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Top routes by revenue</h3></div>
+    <div class="bars">
+      {% for r in top_routes %}
+      <div class="bar-row">
+        <span class="bar-label">{{ r.origin }} → {{ r.destination }}</span>
+        <div class="bar-track"><div class="bar-fill alt" style="width: {{ ((r.revenue|float) / max_route * 100)|round }}%"></div></div>
+        <span class="bar-val">{{ r.revenue|money }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Master data</h3></div>
+    <ul class="stat-list">
+      {% for k in ['customers','drivers','vehicles','routes','payments','maintenance'] %}
+      <li><a href="{{ url_for('list_records', name=k) }}">{{ icon(ENTITIES[k].icon, 16) }} {{ ENTITIES[k].title }}</a><strong>{{ counts[k] }}</strong></li>
+      {% endfor %}
+    </ul>
+    <div class="chips">
+      {% for f in fleet %}<span class="chip">Vehicles · {{ f.status }}: <b>{{ f.n }}</b></span>{% endfor %}
+      {% for d in drivers %}<span class="chip">Drivers · {{ d.status }}: <b>{{ d.n }}</b></span>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h3>Recent shipments</h3>
+    <a class="link" href="{{ url_for('list_records', name='shipments') }}">View all →</a>
+  </div>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Tracking No</th><th>Customer</th><th>Route</th><th>Vehicle</th><th>Driver</th><th>Ship Date</th><th>Status</th><th class="r">Charge</th><th class="r">Paid</th></tr></thead>
+    <tbody>
+    {% for s in recent %}
+      <tr>
+        <td><a class="mono link" href="{{ url_for('shipment_detail', rid=s.shipment_id) }}">{{ s.tracking_no }}</a></td>
+        <td>{{ s.customer }}</td>
+        <td>{{ s.origin }} → {{ s.destination }}</td>
+        <td class="mono">{{ s.vehicle or '—' }}</td>
+        <td>{{ s.driver or '—' }}</td>
+        <td>{{ s.ship_date }}</td>
+        <td><span class="badge s-{{ s.status|replace(' ','-')|lower }}">{{ s.status }}</span></td>
+        <td class="r">{{ s.freight_charge|money }}</td>
+        <td class="r">{{ s.amount_paid|money }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

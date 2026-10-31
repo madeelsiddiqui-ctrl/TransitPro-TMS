@@ -1,0 +1,71 @@
+{% from "_icons.html" import icon %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Dashboard{% endblock %} · {{ P.title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-mark">{{ icon('truck', 22) }}</span>
+      <span><strong>TransitPro</strong><small>Transport Management</small></span>
+    </a>
+    {% set ep = request.endpoint %}{% set cur = request.view_args.get('name') if request.view_args else None %}
+    <nav>
+      <div class="nav-label">Overview</div>
+      <a href="{{ url_for('dashboard') }}" class="{{ 'active' if ep=='dashboard' }}">{{ icon('dashboard') }} Dashboard</a>
+      <a href="{{ url_for('track') }}" class="{{ 'active' if ep=='track' }}">{{ icon('pin') }} Track Shipment</a>
+      <div class="nav-label">Operations</div>
+      {% for key in ['shipments','payments','customers'] %}
+      <a href="{{ url_for('list_records', name=key) }}" class="{{ 'active' if cur==key or (ep=='shipment_detail' and key=='shipments') }}">{{ icon(ENTITIES[key].icon) }} {{ ENTITIES[key].title }}</a>
+      {% endfor %}
+      <div class="nav-label">Fleet</div>
+      {% for key in ['vehicles','drivers','routes','maintenance'] %}
+      <a href="{{ url_for('list_records', name=key) }}" class="{{ 'active' if cur==key }}">{{ icon(ENTITIES[key].icon) }} {{ ENTITIES[key].title }}</a>
+      {% endfor %}
+      <div class="nav-label">Database</div>
+      <a href="{{ url_for('reports') }}" class="{{ 'active' if ep=='reports' }}">{{ icon('chart') }} SQL Reports</a>
+      <a href="{{ url_for('console') }}" class="{{ 'active' if ep=='console' }}">{{ icon('terminal') }} SQL Console</a>
+      <a href="{{ url_for('about') }}" class="{{ 'active' if ep=='about' }}">{{ icon('db') }} ERD &amp; Project</a>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="engine engine-{{ ENGINE }}">{{ icon('db', 14) }} {{ 'MySQL' if ENGINE=='mysql' else 'SQLite' }} connected</span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">☰</button>
+      <form class="top-search" action="{{ url_for('track') }}">
+        {{ icon('search', 16) }}<input name="tracking_no" placeholder="Track by number, e.g. TMS-2026-0010">
+      </form>
+      <div class="user">
+        <div class="avatar">MA</div>
+        <div><strong>{{ P.student }}</strong><small>{{ P.reg_no }}</small></div>
+      </div>
+    </header>
+
+    <main class="content">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% if msgs %}<div class="flashes">
+          {% for cat, m in msgs %}
+            {% if cat == 'sql' %}<div class="flash flash-sql">{{ icon('code', 15) }} <code>{{ m }}</code></div>
+            {% else %}<div class="flash flash-{{ cat }}">{{ m }}</div>{% endif %}
+          {% endfor %}</div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      {{ P.title }} · {{ P.course }} · {{ P.program }} · {{ P.university }} · Instructor: {{ P.instructor }}
+    </footer>
+  </div>
+</div>
+</body>
+</html>

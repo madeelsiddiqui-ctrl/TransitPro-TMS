@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}ERD & Project{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ icon('db', 24) }} ERD &amp; Project Information</h1>
+    <p class="muted">How the Entity-Relationship Diagram, the SQL database and this web interface work together.</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card profile">
+    <div class="avatar xl">MA</div>
+    <div>
+      <h2>{{ P.student }}</h2>
+      <dl>
+        <dt>Program / Batch</dt><dd>{{ P.program }}</dd>
+        <dt>Registration No.</dt><dd class="mono">{{ P.reg_no }}</dd>
+        <dt>Course</dt><dd>{{ P.course }}</dd>
+        <dt>Instructor</dt><dd>{{ P.instructor }}</dd>
+        <dt>University</dt><dd>{{ P.university }}</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Architecture</h3>
+    <div class="arch">
+      <div class="arch-box">Browser<small>HTML forms · CSS</small></div><span>⇄</span>
+      <div class="arch-box">Flask (Python)<small>routes · validation · SQL</small></div><span>⇄</span>
+      <div class="arch-box">{{ 'MySQL 8' if ENGINE=='mysql' else 'SQLite' }}<small>transport_db · 7 tables</small></div>
+    </div>
+    <ul class="concepts">
+      <li><b>Tables:</b> 7 normalised tables (3NF)</li>
+      <li><b>Primary Keys:</b> AUTO_INCREMENT surrogate key on each table</li>
+      <li><b>Foreign Keys:</b> 7 FKs with ON DELETE RESTRICT / CASCADE / SET NULL</li>
+      <li><b>Constraints:</b> NOT NULL, UNIQUE, CHECK, DEFAULT</li>
+      <li><b>Joins:</b> INNER, LEFT, RIGHT, SELF (see SQL Reports)</li>
+      <li><b>CRUD:</b> Insert, View, Update, Delete forms for every table</li>
+      <li><b>Extra:</b> View, indexes, stored procedure, function, triggers, transactions</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h3>Entity-Relationship Diagram</h3></div>
+  <img class="erd" src="{{ url_for('static', filename='erd.png') }}" alt="ERD of the Transport Management System">
+</div>
+
+<div class="card">
+  <div class="card-head"><h3>Tables in the database</h3></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Table</th><th>Primary Key</th><th>Foreign Keys</th><th class="r">Rows</th></tr></thead>
+    <tbody>{% for t in tables %}
+      <tr><td><a class="link mono" href="{{ url_for('list_records', name=t.name) }}">{{ t.name }}</a></td>
+          <td class="mono">{{ t.pk }}</td><td class="mono">{{ t.fks|join(', ') or '—' }}</td><td class="r">{{ t.rows }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

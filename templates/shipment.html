@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ s.tracking_no }}{% endblock %}
+{% block content %}
+{% set steps = ['Booked','In Transit','Delivered'] %}
+<div class="page-head">
+  <div>
+    <a class="back" href="{{ url_for('list_records', name='shipments') }}">{{ icon('back', 16) }} Shipments</a>
+    <h1><span class="mono">{{ s.tracking_no }}</span> <span class="badge lg s-{{ s.status|replace(' ','-')|lower }}">{{ s.status }}</span></h1>
+    <p class="muted">{{ s.goods_desc }} · {{ s.weight_kg|num }} kg · booked {{ s.ship_date }}</p>
+  </div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('create_record', name='payments', shipment_id=s.shipment_id) }}">{{ icon('card', 16) }} Add Payment</a>
+    <a class="btn btn-primary" href="{{ url_for('edit_record', name='shipments', rid=s.shipment_id) }}">{{ icon('edit', 16) }} Edit Shipment</a>
+  </div>
+</div>
+
+{% if s.status != 'Cancelled' %}
+<div class="card progress">
+  {% for st in steps %}
+    {% set done = steps.index(st) <= steps.index(s.status) %}
+    <div class="step {{ 'done' if done }}"><span class="dot">{{ loop.index }}</span><span>{{ st }}</span></div>
+    {% if not loop.last %}<div class="step-line {{ 'done' if steps.index(st) < steps.index(s.status) }}"></div>{% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+{% if over_capacity %}<div class="flash flash-error">Warning: shipment weight ({{ s.weight_kg|num }} kg) exceeds vehicle capacity ({{ s.capacity_kg|num }} kg).</div>{% endif %}
+
+<div class="grid-3">
+  <div class="card info">
+    <h3>{{ icon('users', 16) }} Customer</h3>
+    <dl><dt>Name</dt><dd>{{ s.customer }}</dd><dt>Company</dt><dd>{{ s.company or '—' }}</dd>
+        <dt>Phone</dt><dd>{{ s.customer_phone }}</dd><dt>Email</dt><dd>{{ s.customer_email or '—' }}</dd>
+        <dt>City</dt><dd>{{ s.customer_city }}</dd></dl>
+  </div>
+  <div class="card info">
+    <h3>{{ icon('route', 16) }} Route</h3>
+    <div class="route-big">{{ s.origin }} <span>→</span> {{ s.destination }}</div>
+    <dl><dt>Distance</dt><dd>{{ s.distance_km|num }} km</dd><dt>Est. time</dt><dd>{{ s.est_hours|num }} hrs</dd>
+        <dt>Rate</dt><dd>PKR {{ s.rate_per_kg|num }} / kg</dd><dt>Delivered</dt><dd>{{ s.delivery_date or '—' }}</dd></dl>
+  </div>
+  <div class="card info">
+    <h3>{{ icon('truck', 16) }} Vehicle &amp; Driver</h3>
+    <dl><dt>Vehicle</dt><dd class="mono">{{ s.plate_no or 'Not assigned' }}</dd>
+        <dt>Type</dt><dd>{{ s.vehicle_type or '—' }} {{ s.model or '' }}</dd>
+        <dt>Capacity</dt><dd>{{ s.capacity_kg|num }} kg</dd>
+        <dt>Driver</dt><dd>{{ s.driver or 'Not assigned' }}</dd><dt>Driver phone</dt><dd>{{ s.driver_phone or '—' }}</dd></dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h3>{{ icon('money', 16) }} Billing &amp; payments</h3></div>
+  <div class="bill">
+    <div><span>Freight charge</span><strong>PKR {{ s.freight_charge|money }}</strong></div>
+    <div><span>Paid</span><strong class="ok">PKR {{ paid|money }}</strong></div>
+    <div><span>Balance due</span><strong class="{{ 'warn' if balance > 0 else 'ok' }}">PKR {{ balance|money }}</strong></div>
+  </div>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>ID</th><th>Date</th><th>Method</th><th>Reference</th><th class="r">Amount</th><th class="r">Actions</th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+      <tr><td class="muted">#{{ p.payment_id }}</td><td>{{ p.payment_date }}</td><td>{{ p.method }}</td>
+          <td class="mono">{{ p.reference_no or '—' }}</td><td class="r">{{ p.amount|money }}</td>
+          <td class="r"><a class="icon-btn" href="{{ url_for('edit_record', name='payments', rid=p.payment_id) }}">{{ icon('edit', 16) }}</a></td></tr>
+    {% else %}
+      <tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

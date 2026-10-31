@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Track Shipment{% endblock %}
+{% block content %}
+<div class="track-hero card">
+  <div class="track-ico">{{ icon('pin', 34) }}</div>
+  <h1>Track your shipment</h1>
+  <p class="muted">Enter a tracking number. The app runs <code>SELECT ... FROM shipments WHERE tracking_no = ?</code></p>
+  <form method="get" class="track-form">
+    <input name="tracking_no" value="{{ tn }}" placeholder="TMS-2026-0010" autofocus>
+    <button class="btn btn-primary">{{ icon('search', 16) }} Track</button>
+  </form>
+  <p class="muted small">Try: TMS-2026-0010 · TMS-2026-0013 · TMS-2026-0001</p>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ ent.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ icon(ent.icon, 24) }} {{ ent.title }}</h1>
+    <p class="muted">{{ rows|length }} record{{ '' if rows|length == 1 else 's' }} · table <code>{{ name }}</code> · primary key <code>{{ ent.pk }}</code></p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('create_record', name=name) }}">{{ icon('plus', 16) }} Add {{ ent.singular }}</a>
+</div>
+
+<div class="card">
+  <form class="toolbar" method="get">
+    <div class="search-box">{{ icon('search', 16) }}
+      <input type="search" name="q" value="{{ q }}" placeholder="Search {{ ent.title|lower }} by {{ ent.search|join(', ')|replace('_',' ') }}">
+    </div>
+    {% for col, opts in (ent.filters or {}).items() %}
+      <select name="{{ col }}" onchange="this.form.submit()">
+        <option value="">All {{ col }}</option>
+        {% for o in opts %}<option {{ 'selected' if request.args.get(col)==o }}>{{ o }}</option>{% endfor %}
+      </select>
+    {% endfor %}
+    <button class="btn">Search</button>
+    {% if q or request.args|length %}<a class="btn btn-ghost" href="{{ url_for('list_records', name=name) }}">Clear</a>{% endif %}
+  </form>
+
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr>
+      {% for col, label in ent.columns %}<th class="{{ 'r' if col in MONEY_COLS or col.endswith('_kg') or col.endswith('_km') }}">{{ label }}</th>{% endfor %}
+      <th class="r">Actions</th>
+    </tr></thead>
+    <tbody>
+    {% for row in rows %}
+      {% set rid = row[ent.pk] %}
+      <tr>
+      {% for col, label in ent.columns %}
+        {% set v = row[col] %}
+        {% if col == 'status' %}<td><span class="badge s-{{ v|replace(' ','-')|lower }}">{{ v }}</span></td>
+        {% elif col == 'tracking_no' and name == 'shipments' %}<td><a class="mono link" href="{{ url_for('shipment_detail', rid=rid) }}">{{ v }}</a></td>
+        {% elif col in MONEY_COLS %}<td class="r">{{ v|money }}</td>
+        {% elif col.endswith('_kg') or col.endswith('_km') %}<td class="r">{{ v|num }}</td>
+        {% elif col in ['plate_no','license_no','tracking_no','reference_no'] %}<td class="mono">{{ v or '—' }}</td>
+        {% elif col.endswith('_id') %}<td class="muted">#{{ v }}</td>
+        {% else %}<td>{{ v if v is not none else '—' }}</td>{% endif %}
+      {% endfor %}
+        <td class="r actions">
+          {% if ent.detail %}<a class="icon-btn" title="View" href="{{ url_for('shipment_detail', rid=rid) }}">{{ icon('eye', 16) }}</a>{% endif %}
+          <a class="icon-btn" title="Edit" href="{{ url_for('edit_record', name=name, rid=rid) }}">{{ icon('edit', 16) }}</a>
+          <form method="post" action="{{ url_for('delete_record', name=name, rid=rid) }}" onsubmit="return confirm('Delete {{ ent.singular|lower }} #{{ rid }}? This runs a DELETE statement.')">
+            <button class="icon-btn danger" title="Delete">{{ icon('trash', 16) }}</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="{{ ent.columns|length + 1 }}" class="empty">No records match your search.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<details class="sql-box">
+  <summary>{{ icon('code', 15) }} SQL executed for this page</summary>
+  <pre>{{ sql }}</pre>
+</details>
+{% endblock %}

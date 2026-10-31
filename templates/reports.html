@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}SQL Reports{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ icon('chart', 24) }} SQL Reports</h1>
+    <p class="muted">Pre-written queries demonstrating JOINs, aggregate functions, GROUP BY / HAVING and sub-queries — executed live on the database.</p>
+  </div>
+</div>
+<div class="reports">
+  <nav class="report-nav card">
+    {% for r in reports %}
+      <a href="{{ url_for('reports', r=r.key) }}" class="{{ 'active' if r.key == rep.key }}">
+        <strong>{{ r.concept }}</strong><span>{{ r.title.split('–')[-1].strip() }}</span></a>
+    {% endfor %}
+  </nav>
+  <div>
+    <div class="card">
+      <div class="card-head"><h3>{{ rep.title }}</h3><span class="tag">{{ rep.concept }}</span></div>
+      <pre class="sql">{{ rep.sql }}</pre>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Result</h3><span class="muted">{{ rows|length }} row(s)</span></div>
+      <div class="table-wrap">
+      <table class="table">
+        <thead><tr>{% for c in cols %}<th class="{{ 'r' if c in MONEY_COLS or c.endswith('_kg') or c.endswith('_km') or c in ['trips','shipments','total_shipments'] }}">{{ c }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for row in rows %}<tr>
+          {% for c in cols %}
+            {% if c in MONEY_COLS %}<td class="r">{{ row[c]|money }}</td>
+            {% elif c.endswith('_kg') or c.endswith('_km') or c in ['trips','shipments','total_shipments'] %}<td class="r">{{ row[c]|num }}</td>
+            {% elif c == 'status' %}<td><span class="badge s-{{ row[c]|replace(' ','-')|lower }}">{{ row[c] }}</span></td>
+            {% else %}<td>{{ row[c] if row[c] is not none else '—' }}</td>{% endif %}
+          {% endfor %}</tr>
+        {% else %}<tr><td colspan="{{ cols|length or 1 }}" class="empty">No rows.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

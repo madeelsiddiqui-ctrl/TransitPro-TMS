@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ 'New' if mode=='new' else 'Edit' }} {{ ent.singular }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="back" href="{{ url_for('list_records', name=name) }}">{{ icon('back', 16) }} {{ ent.title }}</a>
+    <h1>{{ 'Add new' if mode=='new' else 'Edit' }} {{ ent.singular|lower }}{% if mode=='edit' %} <span class="muted">#{{ rid }}</span>{% endif %}</h1>
+    <p class="muted">Submitting runs an <code>{{ 'INSERT' if mode=='new' else 'UPDATE' }}</code> on table <code>{{ name }}</code>. Constraints (PK, FK, UNIQUE, CHECK, NOT NULL) are enforced by the database.</p>
+  </div>
+</div>
+
+<form class="card form" method="post" novalidate>
+  <div class="form-grid">
+  {% for f in ent.fields %}
+    {% set v = values[f.name] %}
+    <label class="field {{ 'wide' if f.wide }}">
+      <span>{{ f.label }}{% if f.required %} <em>*</em>{% endif %}
+        {% if f.type == 'fk' %}<small class="tag">FK → {{ f.fk[0] }}</small>{% endif %}</span>
+      {% if f.type == 'select' %}
+        <select name="{{ f.name }}" {{ 'required' if f.required }}>
+          {% if not f.required %}<option value="">—</option>{% endif %}
+          {% for o in f.options %}<option {{ 'selected' if v == o }}>{{ o }}</option>{% endfor %}
+        </select>
+      {% elif f.type == 'fk' %}
+        <select name="{{ f.name }}" {{ 'required' if f.required }}>
+          <option value="">{{ '— select —' if f.required else '— not assigned —' }}</option>
+          {% for oid, olabel in options[f.name] %}<option value="{{ oid }}" {{ 'selected' if v is not none and v|string == oid|string }}>{{ olabel }}</option>{% endfor %}
+        </select>
+      {% elif f.type == 'textarea' %}
+        <textarea name="{{ f.name }}" rows="3">{{ v or '' }}</textarea>
+      {% else %}
+        <input type="{{ f.type or 'text' }}" name="{{ f.name }}" value="{{ v if v is not none else '' }}"
+          {% if f.step %}step="{{ f.step }}"{% endif %} {% if f.min is defined %}min="{{ f.min }}"{% endif %}
+          {% if f.max is defined %}max="{{ f.max }}"{% endif %} {{ 'required' if f.required }}>
+      {% endif %}
+      {% if f.help %}<small class="help">{{ f.help }}</small>{% endif %}
+    </label>
+  {% endfor %}
+  </div>
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ url_for('list_records', name=name) }}">Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ 'Save ' ~ ent.singular if mode=='new' else 'Update ' ~ ent.singular }}</button>
+  </div>
+</form>
+{% endblock %}

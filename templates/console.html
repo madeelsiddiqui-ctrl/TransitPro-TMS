@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}SQL Console{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ icon('terminal', 24) }} SQL Console</h1>
+    <p class="muted">Write your own <b>read-only</b> query (SELECT / SHOW / DESCRIBE) and run it against the live <code>{{ 'transport_db' if ENGINE=='mysql' else 'transport.db' }}</code> database.</p>
+  </div>
+</div>
+<form method="post" class="card console">
+  <textarea name="sql" rows="7" spellcheck="false">{{ statement }}</textarea>
+  <div class="form-actions between">
+    <div class="chips">
+      {% for ex in ["SELECT * FROM v_shipment_details", "SELECT city, COUNT(*) AS customers FROM customers GROUP BY city", "SELECT status, SUM(freight_charge) AS revenue FROM shipments GROUP BY status", "SELECT d.full_name, COUNT(s.shipment_id) AS trips FROM drivers d LEFT JOIN shipments s ON s.driver_id = d.driver_id GROUP BY d.driver_id, d.full_name"] %}
+        <button type="button" class="chip" onclick="this.form.sql.value=this.dataset.q" data-q="{{ ex }}">{{ ex[:38] }}…</button>
+      {% endfor %}
+    </div>
+    <button class="btn btn-primary">Run query ▶</button>
+  </div>
+</form>
+{% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+{% if cols %}
+<div class="card">
+  <div class="card-head"><h3>Result</h3><span class="muted">{{ rows|length }} row(s)</span></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in rows %}<tr>{% for c in cols %}<td>{{ row[c] if row[c] is not none else 'NULL' }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+{% endblock %}
